@@ -9,11 +9,14 @@ let {
   initKeys,
   keyPressed,
   bindKeys,
-  unbindKeys
+  unbindKeys,
+  initPointer,
+  pointerPressed
 } = kontra;
 
 let { canvas, context } = init();
 initKeys();
+initPointer();
 setImagePath("assets/images/");
 load("map.png", "enemy.png", "character.png").then(function() {
   // Image asset can be accessed by both
@@ -25,7 +28,6 @@ load("map.png", "enemy.png", "character.png").then(function() {
     y: 0,
     image: kontra.imageAssets["map"]
   });
-
   let character = Sprite({
     x: 20,
     y: 300,
@@ -57,15 +59,17 @@ load("map.png", "enemy.png", "character.png").then(function() {
 
   let loop = GameLoop({
     // create the main game loop
+
     update: function() {
       if (character.dx >= 0) {
-        if (keyPressed("left")) {
+        if (keyPressed("left") || pointerPressed("left")) {
           character.dx -= 0.05;
         }
       }
-      if (!keyPressed("left")) {
+      if (!keyPressed("left") || !pointerPressed("left")) {
         character.dx += 0.03;
       }
+
       if (character.dx >= 1) {
         character.dx = 1;
       }
