@@ -1,5 +1,6 @@
 kontra.init();
 kontra.initKeys();
+kontra.initPointer();
 kontra.setImagePath("assets/images/");
 function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
