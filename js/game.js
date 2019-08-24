@@ -29,6 +29,22 @@ function lose() {
   gameState = -1;
 }
 
+function detectmob() {
+  if (
+    navigator.userAgent.match(/Android/i) ||
+    navigator.userAgent.match(/webOS/i) ||
+    navigator.userAgent.match(/iPhone/i) ||
+    navigator.userAgent.match(/iPad/i) ||
+    navigator.userAgent.match(/iPod/i) ||
+    navigator.userAgent.match(/BlackBerry/i) ||
+    navigator.userAgent.match(/Windows Phone/i)
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 kontra
   .load(
     "map.png",
@@ -404,23 +420,51 @@ kontra
       }
     });
 
-    canvas.addEventListener("click", function() {
-      var x = event.pageX - elemLeft,
-        y = event.pageY - elemTop;
-      if (gameState === 0) {
-        //when starting game
-        if (x < 240) {
-          //click level1
-          loop1.start();
-          gameState = 1;
-        } else {
-          //click level2
-          loop2.start();
-          gameState = 2;
+    if (detectmob()) {
+      //detect a mobile
+      canvas.addEventListener("touchstart", function(event) {
+        //get the x position user touches
+        var x = event.changedTouches[0].pageX - elemLeft;
+        //get the margin
+        var margin = document.getElementById("a").offsetLeft;
+        if (gameState === 0) {
+          //when starting game
+          if (x < (window.innerWidth - margin * 2) / 2) {
+            //check left or right is touched
+            //left level1
+            loop1.start();
+            gameState = 1;
+          } else {
+            //right level2
+            loop2.start();
+            gameState = 2;
+          }
+        } else if (gameState === -1) {
+          //when lose the game
+          window.location = "";
         }
-      } else if (gameState === -1) {
-        //when lose the game
-        window.location = "";
-      }
-    });
+      });
+    } else {
+      //detect not a mobile
+      canvas.addEventListener("click", function(event) {
+        var x = event.pageX - elemLeft;
+
+        var margin = document.getElementById("a").offsetLeft;
+        if (gameState === 0) {
+          //when starting game
+          if (x < (window.innerWidth - margin * 2) / 2) {
+            //click level1
+            loop1.start();
+            gameState = 1;
+          } else {
+            //click level2
+            loop2.start();
+            gameState = 2;
+          }
+        } else if (gameState === -1) {
+          //when lose the game
+          window.location = "";
+        }
+      });
+    }
   });
