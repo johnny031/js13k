@@ -8,16 +8,24 @@ var canvas = document.getElementById("a");
 (elemLeft = canvas.offsetLeft), (elemTop = canvas.offsetTop);
 var ctx = canvas.getContext("2d");
 function init() {
-  //draw "level1"
+  ctx.font = "60px Arial";
+  ctx.strokeText("A NAUGHTY BOY", 80, 200);
+
   ctx.font = "30px Arial";
-  ctx.strokeText("Level1", 110, 300);
-  //draw midline
-  ctx.moveTo(320, 0);
+  ctx.fillText("HOLD CLICK TO SLOW DOWN", 115, 280);
+
+  ctx.font = "30px Arial";
+  ctx.fillText("LEVEL1", 110, 520);
+
+  ctx.moveTo(320, 400);
   ctx.lineTo(320, 640);
   ctx.stroke();
-  //draw "level2"
+  ctx.moveTo(0, 400);
+  ctx.lineTo(640, 400);
+  ctx.stroke();
+
   ctx.font = "30px Arial";
-  ctx.strokeText("Level2", 450, 300);
+  ctx.fillText("LEVEL2", 430, 520);
 }
 init();
 
@@ -32,14 +40,14 @@ function degreesToRadians(degrees) {
 }
 
 function lose(x, y) {
-  var score = 100 - (Math.abs(x) + y - 20) / 15.05;
+  var remain = 100 - (Math.abs(x) + y - 20) / 15.05;
   gameState = -1;
   document.getElementById("a").style.background = "lightgray";
   setTimeout(function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "30px Arial";
     ctx.strokeText("FAILED", 280, 250);
-    ctx.strokeText("remain: " + Math.round(score) + "%", 255, 300);
+    ctx.strokeText("remain: " + Math.round(remain) + "%", 255, 300);
   }, 1000);
 }
 
