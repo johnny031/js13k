@@ -41,9 +41,9 @@ function degreesToRadians(degrees) {
 
 function lose(x, y) {
   var remain = 100 - (Math.abs(x) + y - 20) / 15.05;
-  gameState = -1;
   document.getElementById("a").style.background = "lightgray";
   setTimeout(function() {
+    gameState = -1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "30px Arial";
     ctx.strokeText("FAILED", 280, 250);
@@ -52,9 +52,9 @@ function lose(x, y) {
 }
 
 function win(timer) {
-  gameState = -1;
   document.getElementById("a").style.background = "orangered";
   setTimeout(function() {
+    gameState = -1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "30px Arial";
     ctx.strokeText("VICTORY", 275, 250);
