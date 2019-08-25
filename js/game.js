@@ -36,15 +36,11 @@ function lose(x, y) {
   gameState = -1;
   document.getElementById("a").style.background = "lightgray";
   setTimeout(function() {
-    renderLosePage(score);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "30px Arial";
+    ctx.strokeText("FAILED", 280, 250);
+    ctx.strokeText("remain: " + Math.round(score) + "%", 255, 300);
   }, 1000);
-}
-
-function renderLosePage(score) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = "30px Arial";
-  ctx.strokeText("FAILED", 280, 250);
-  ctx.strokeText("remain: " + Math.round(score) + "%", 255, 300);
 }
 
 function win(timer) {
