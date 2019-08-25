@@ -7,26 +7,55 @@ kontra.setImagePath("assets/images/");
 var canvas = document.getElementById("a");
 (elemLeft = canvas.offsetLeft), (elemTop = canvas.offsetTop);
 var ctx = canvas.getContext("2d");
-//draw "level1"
-ctx.font = "30px Arial";
-ctx.strokeText("Level1", 110, 300);
-//draw midline
-ctx.moveTo(320, 0);
-ctx.lineTo(320, 640);
-ctx.stroke();
-//draw "level2"
-ctx.font = "30px Arial";
-ctx.strokeText("Level2", 450, 300);
+function init() {
+  //draw "level1"
+  ctx.font = "30px Arial";
+  ctx.strokeText("Level1", 110, 300);
+  //draw midline
+  ctx.moveTo(320, 0);
+  ctx.lineTo(320, 640);
+  ctx.stroke();
+  //draw "level2"
+  ctx.font = "30px Arial";
+  ctx.strokeText("Level2", 450, 300);
+}
+init();
 
 var gameState = 0;
-//0 starting page, 1 loop1, 2 loop2, -1 lose
+//0 starting page, 1 loop1, 2 loop2, -1 lose or win
+var timer = 0;
+var delay = true;
+//which define score when wins
 
 function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
 }
 
-function lose() {
+function lose(x, y) {
+  var score = 100 - (Math.abs(x) + y - 20) / 15.05;
   gameState = -1;
+  document.getElementById("a").style.background = "lightgray";
+  setTimeout(function() {
+    renderLosePage(score);
+  }, 1000);
+}
+
+function renderLosePage(score) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = "30px Arial";
+  ctx.strokeText("FAILED", 280, 250);
+  ctx.strokeText("remain: " + Math.round(score) + "%", 255, 300);
+}
+
+function win(timer) {
+  gameState = -1;
+  document.getElementById("a").style.background = "orangered";
+  setTimeout(function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "30px Arial";
+    ctx.strokeText("VICTORY", 275, 250);
+    ctx.strokeText("score: " + (100 - timer), 278, 300);
+  }, 1000);
 }
 
 function detectmob() {
@@ -47,12 +76,11 @@ function detectmob() {
 
 kontra
   .load(
-    "map.png",
     "enemy.png",
     "character.png",
-    "long_map.png",
-    "water1.png",
-    "water2.png",
+    "tile1.png",
+    "tile2.png",
+    "water.png",
     "fire.png",
     "poison.png",
     "bounce.png",
@@ -60,14 +88,6 @@ kontra
     "tree2.png"
   )
   .then(function() {
-    let map = kontra.Sprite({
-      x: 0,
-      y: 0,
-      height: 640,
-      width: 1600,
-      dx: -2,
-      image: kontra.imageAssets["long_map"]
-    });
     let character = kontra.Sprite({
       x: 20,
       y: 330,
@@ -75,26 +95,34 @@ kontra
       ddy: 0.5,
       image: kontra.imageAssets["character"]
     });
+    let map = kontra.Sprite({
+      x: 0,
+      dx: -2
+    });
+
+    let tiles = [];
+    function createmap(x, y, n) {
+      let tile = kontra.Sprite({
+        type: "tile",
+        x: 32 * x,
+        y: 32 * y,
+        dx: map.dx,
+        height: 32,
+        width: 32,
+        image: kontra.imageAssets["tile" + n]
+      });
+      tiles.push(tile);
+    }
+    for (var i = 0; i < 50; i++) {
+      createmap(i, 0, 1);
+      createmap(i, 19, 1);
+      for (var j = 1; j < 4; j++) {
+        createmap(i, j, 2);
+        createmap(i, j + 15, 2);
+      }
+    }
 
     let objects = [
-      kontra.Sprite({
-        type: "water",
-        x: 447,
-        y: 512,
-        width: 96,
-        height: 64,
-        dx: map.dx,
-        image: kontra.imageAssets["water1"]
-      }),
-      kontra.Sprite({
-        type: "water",
-        x: 607,
-        y: 512,
-        width: 32,
-        height: 64,
-        dx: map.dx,
-        image: kontra.imageAssets["water2"]
-      }),
       kontra.Sprite({
         type: "fire",
         x: 410,
@@ -159,9 +187,10 @@ kontra
         image: kontra.imageAssets["tree2"]
       })
     ];
+
     function createpoisons(x, y) {
       let poison = kontra.Sprite({
-        type: "poison", //天花板的四條東西
+        type: "poison",
         x: 32 * x,
         y: 32 * y,
         height: 32,
@@ -176,6 +205,24 @@ kontra
         createpoisons(j, i);
       }
     }
+    function createwaters(x, y) {
+      let water = kontra.Sprite({
+        type: "water",
+        x: 32 * x,
+        y: 32 * y,
+        height: 32,
+        width: 32,
+        image: kontra.imageAssets["water"]
+      });
+      objects.push(water);
+    }
+    for (var i = 16; i < 18; i++) {
+      for (var j = 14; j < 17; j++) {
+        createwaters(j, i);
+      }
+    }
+    createwaters(19, 16);
+    createwaters(19, 17);
 
     let enemies = [
       kontra.Sprite({
@@ -207,6 +254,13 @@ kontra
     let loop1 = kontra.GameLoop({
       update() {
         if (kontra.keyPressed("left") || kontra.pointerPressed("left")) {
+          if (delay) {
+            delay = false;
+            timer++;
+            setTimeout(function() {
+              delay = true;
+            }, 1000);
+          }
           if (map.x <= -955) {
             //after map reaches the end, change character's speed
             character.dx -= 0.13;
@@ -242,32 +296,37 @@ kontra
         if (map.dx <= -2) {
           //set the map's speed to 0~2
           map.dx += 0.1;
-        } else if (map.dx >= 0) {
+        } else if (map.dx > 0) {
           map.dx -= 0.05;
         }
 
-        if (character.x >= 570) {
+        if (character.x >= 610) {
           //win
           loop1.stop();
-          alert("You win!");
-          window.location = "";
+          win(timer);
         }
         if (character.y >= 482) {
-          //hit the ceiling
+          //set the ground level
           character.y = 482;
           if (character.dy > 12.5) {
-            //bounce back to the ground
+            //after jumping on the trampoline
+            //gradually jump lower
             character.dy = -Math.abs(character.dy) + 2.5;
           }
+          //default
+          //jump up to constant height
           character.dy = -Math.abs(character.dy) - 0.5;
         }
         if (character.y <= 128) {
-          //set the ground level
+          //hit the ceiling
           character.y = 128;
           character.dy = -Math.abs(character.dy) + 1;
         }
-
         map.update();
+        tiles.map(tile => {
+          tile.dx = map.dx;
+          tile.update();
+        });
         character.update();
         enemies.map(enemy => {
           enemy.dx = map.dx;
@@ -282,7 +341,7 @@ kontra
           enemy.update();
           if (enemy.collidesWith(character)) {
             loop1.stop();
-            lose();
+            lose(map.x, character.x);
           }
         });
 
@@ -292,7 +351,7 @@ kontra
           if (object.collidesWith(character)) {
             if (object.type === "poison") {
               loop1.stop();
-              lose();
+              lose(map.x, character.x);
             } else if (object.type === "fire") {
               //speed boosted when touchs fire
               map.dx = -4;
@@ -310,7 +369,7 @@ kontra
         objects = objects.filter(object => object.isAlive());
       },
       render() {
-        map.render();
+        tiles.map(tile => tile.render());
         character.render();
         enemies.map(enemy => enemy.render());
         objects.map(object => {
@@ -326,6 +385,13 @@ kontra
       //copy loop1 for testing
       update() {
         if (kontra.keyPressed("left") || kontra.pointerPressed("left")) {
+          if (delay) {
+            delay = false;
+            timer++;
+            setTimeout(function() {
+              delay = true;
+            }, 1000);
+          }
           if (map.x <= -955) {
             character.dx -= 0.13;
           } else {
@@ -355,13 +421,12 @@ kontra
         }
         if (map.dx <= -2) {
           map.dx += 0.1;
-        } else if (map.dx >= 0) {
+        } else if (map.dx > 0) {
           map.dx -= 0.05;
         }
-        if (character.x >= 570) {
+        if (character.x >= 610) {
           loop2.stop();
-          alert("You win!");
-          window.location = "";
+          win(timer);
         }
         if (character.y >= 482) {
           character.y = 482;
@@ -376,6 +441,10 @@ kontra
         }
 
         map.update();
+        tiles.map(tile => {
+          tile.dx = map.dx;
+          tile.update();
+        });
         character.update();
         enemies.map(enemy => {
           enemy.dx = map.dx;
@@ -389,7 +458,7 @@ kontra
           enemy.update();
           if (enemy.collidesWith(character)) {
             loop2.stop();
-            lose();
+            lose(map.x, character.x);
           }
         });
 
@@ -399,7 +468,7 @@ kontra
           if (object.collidesWith(character)) {
             if (object.type === "water" || object.type === "poison") {
               loop2.stop();
-              lose();
+              lose(map.x, character.x);
             } else if (object.type === "fire") {
               map.dx = -4;
               object.ttl = 0;
@@ -413,7 +482,7 @@ kontra
         objects = objects.filter(object => object.isAlive());
       },
       render() {
-        map.render();
+        tiles.map(tile => tile.render());
         character.render();
         enemies.map(enemy => enemy.render());
         objects.map(object => object.render());
