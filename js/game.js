@@ -34,6 +34,8 @@ var gameState = 0;
 var timer = 0;
 var delay = true;
 //which define score when wins
+var wood = true;
+var move_back = true;
 
 function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
@@ -89,7 +91,11 @@ kontra
     "poison.png",
     "bounce.png",
     "tree.png",
-    "tree2.png"
+    "tree2.png",
+    "wood.png",
+    "ufo.png",
+    "cockroach.png",
+    "button.png"
   )
   .then(function() {
     let character = kontra.Sprite({
@@ -125,8 +131,46 @@ kontra
         createmap(i, j + 15, 2);
       }
     }
+    let objects1 = [
+      kontra.Sprite({
+        type: "ufo",
+        x: 32 * 18,
+        y: 32 * 14,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["ufo"]
+      }),
+      kontra.Sprite({
+        type: "button",
+        x: 32 * 24,
+        y: 32 * 15,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["button"]
+      }),
+      kontra.Sprite({
+        type: "fire",
+        x: 32 * 27,
+        y: 32 * 15,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["fire"]
+      }),
+      kontra.Sprite({
+        type: "wood_move",
+        x: 32 * 31,
+        y: 32 * 16,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["wood"]
+      })
+    ];
 
-    let objects = [
+    let objects2 = [
       kontra.Sprite({
         type: "fire",
         x: 410,
@@ -201,7 +245,7 @@ kontra
         width: 32,
         image: kontra.imageAssets["poison"]
       });
-      objects.push(poison);
+      objects2.push(poison);
     }
     //create poisonous tiles
     for (var i = 4; i < 8; i++) {
@@ -209,7 +253,7 @@ kontra
         createpoisons(j, i);
       }
     }
-    function createwaters(x, y) {
+    function createwaters(x, y, n) {
       let water = kontra.Sprite({
         type: "water",
         x: 32 * x,
@@ -218,15 +262,56 @@ kontra
         width: 32,
         image: kontra.imageAssets["water"]
       });
-      objects.push(water);
+      if (n === 1) {
+        objects1.push(water);
+      } else {
+        objects2.push(water);
+      }
+    }
+    for (var i = 16; i < 18; i++) {
+      for (var j = 10; j < 17; j++) {
+        createwaters(j, i, 1);
+      }
     }
     for (var i = 16; i < 18; i++) {
       for (var j = 14; j < 17; j++) {
-        createwaters(j, i);
+        createwaters(j, i, 2);
       }
     }
-    createwaters(19, 16);
-    createwaters(19, 17);
+    createwaters(19, 16, 2);
+    createwaters(19, 17, 2);
+
+    function createwoods(x, y) {
+      let wood = kontra.Sprite({
+        type: "wood",
+        x: 32 * x,
+        y: 32 * y,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["wood"]
+      });
+      objects1.push(wood);
+    }
+    for (var i = 10; i < 18; i += 4) {
+      createwoods(i, 15);
+    }
+
+    function createcockroachs(x, y) {
+      let cockroach = kontra.Sprite({
+        type: "cockroach",
+        x: 32 * x,
+        y: 32 * y,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["cockroach"]
+      });
+      objects1.push(cockroach);
+    }
+    for (var i = 29; i < 34; i++) {
+      createcockroachs(i, 15);
+    }
 
     let enemies = [
       kontra.Sprite({
@@ -332,55 +417,66 @@ kontra
           tile.update();
         });
         character.update();
-        enemies.map(enemy => {
-          enemy.dx = map.dx;
-          //enemy wander between y=100~500
-          if (enemy.y < 100) {
-            enemy.y = 100;
-            enemy.dy = Math.abs(enemy.dy); //absolute value 絕對值
-          } else if (enemy.y > 500) {
-            enemy.y = 500;
-            enemy.dy = -Math.abs(enemy.dy);
-          }
-          enemy.update();
-          if (enemy.collidesWith(character)) {
-            loop1.stop();
-            lose(map.x, character.x);
-          }
-        });
 
-        objects.map(object => {
-          object.dx = map.dx;
+        objects1.map(object => {
           object.update();
+          if (object.type === "ufo") {
+            if (move_back) {
+              setTimeout(function() {
+                move_back = false;
+                object.dx = map.dx + 1.2;
+              }, 1300);
+            } else {
+              setTimeout(function() {
+                move_back = true;
+                object.dx = map.dx - 1.2;
+              }, 1300);
+            }
+          } else {
+            object.dx = map.dx;
+          }
           if (object.collidesWith(character)) {
-            if (object.type === "poison") {
+            if (object.type === "wood" || object.type === "wood_move") {
+              object.ttl = 0;
+              if (wood) {
+                character.dy = -Math.abs(character.dy) - 1;
+                wood = !wood;
+                setTimeout(() => {
+                  wood = !wood;
+                }, 5000);
+              }
+              character.dy = -Math.abs(character.dy) - 0.5;
+            } else if (
+              object.type === "water" ||
+              object.type === "ufo" ||
+              object.type === "cockroach"
+            ) {
               loop1.stop();
               lose(map.x, character.x);
             } else if (object.type === "fire") {
-              //speed boosted when touchs fire
               map.dx = -4;
               object.ttl = 0;
-            } else if (object.type === "bounce") {
-              //bounce higher when jumps on trampoline
-              character.dy = -Math.abs(character.dy) - 3;
-            } else if (object.type === "tree") {
-              //pull back when hit trees
-              character.dx = -3;
+            } else if (object.type === "button") {
+              objects1.map(wood => {
+                if (wood.type === "wood_move") {
+                  wood.dy -= 0.1;
+                  setTimeout(function() {
+                    wood.dy = 0;
+                  }, 300);
+                }
+              });
             }
           }
         });
         //clear whose ttl (time to live) = 0
-        objects = objects.filter(object => object.isAlive());
+        objects1 = objects1.filter(object => object.isAlive());
       },
       render() {
         tiles.map(tile => tile.render());
         character.render();
         enemies.map(enemy => enemy.render());
-        objects.map(object => {
-          //temporary setting
-          if (object.type !== "water" && object.type !== "poison") {
-            object.render();
-          }
+        objects1.map(object => {
+          object.render();
         });
       }
     });
@@ -454,7 +550,7 @@ kontra
           enemy.dx = map.dx;
           if (enemy.y < 100) {
             enemy.y = 100;
-            enemy.dy = Math.abs(enemy.dy); //absolute value 絕對值
+            enemy.dy = Math.abs(enemy.dy);
           } else if (enemy.y > 500) {
             enemy.y = 500;
             enemy.dy = -Math.abs(enemy.dy);
@@ -466,7 +562,7 @@ kontra
           }
         });
 
-        objects.map(object => {
+        objects2.map(object => {
           object.dx = map.dx;
           object.update();
           if (object.collidesWith(character)) {
@@ -483,13 +579,13 @@ kontra
             }
           }
         });
-        objects = objects.filter(object => object.isAlive());
+        objects2 = objects2.filter(object => object.isAlive());
       },
       render() {
         tiles.map(tile => tile.render());
         character.render();
         enemies.map(enemy => enemy.render());
-        objects.map(object => object.render());
+        objects2.map(object => object.render());
       }
     });
 
