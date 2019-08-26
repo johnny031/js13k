@@ -29,13 +29,17 @@ function init() {
 }
 init();
 
-var gameState = 0;
 //0 starting page, 1 loop1, 2 loop2, -1 lose or win
+var gameState = 0;
+//which define score when wins
 var timer = 0;
 var delay = true;
-//which define score when wins
+//jump higher when stepping on wood the first time
 var wood = true;
+//ufo
 var move_back = true;
+//count coins get
+var coin = 0;
 
 function degreesToRadians(degrees) {
   return (degrees * Math.PI) / 180;
@@ -53,14 +57,18 @@ function lose(x, y) {
   }, 1000);
 }
 
-function win(timer) {
+function win(timer, coin) {
   document.getElementById("a").style.background = "orangered";
   setTimeout(function() {
     gameState = -1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "30px Arial";
     ctx.strokeText("VICTORY", 275, 250);
-    ctx.strokeText("score: " + (100 - timer), 278, 300);
+    ctx.strokeText(
+      "score: " + Math.round(100 - timer * 2.5 + coin * 2.7),
+      278,
+      300
+    );
   }, 1000);
 }
 
@@ -95,7 +103,9 @@ kontra
     "wood.png",
     "ufo.png",
     "cockroach.png",
-    "button.png"
+    "button.png",
+    "coin.png",
+    "dead.png"
   )
   .then(function() {
     let character = kontra.Sprite({
@@ -104,6 +114,25 @@ kontra
       dx: 0,
       ddy: 0.5,
       image: kontra.imageAssets["character"]
+    });
+    let coin_sign = kontra.Sprite({
+      x: 32 * 16,
+      y: 32 * 1,
+      width: 32,
+      height: 32,
+      image: kontra.imageAssets["coin"]
+    });
+    let coin_get = kontra.Sprite({
+      x: 32 * 17,
+      y: 32 * 2,
+      width: 32,
+      height: 32,
+      render() {
+        this.context.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("×", this.x + 8, this.y - 5);
+        ctx.fillText(coin, this.x + 36, this.y - 5);
+      }
     });
     let map = kontra.Sprite({
       x: 0,
@@ -167,6 +196,15 @@ kontra
         height: 32,
         dx: map.dx,
         image: kontra.imageAssets["wood"]
+      }),
+      kontra.Sprite({
+        type: "bounce",
+        x: 32 * 45,
+        y: 32 * 15,
+        width: 32,
+        height: 32,
+        dx: map.dx,
+        image: kontra.imageAssets["bounce"]
       })
     ];
 
@@ -313,6 +351,45 @@ kontra
       createcockroachs(i, 15);
     }
 
+    function createcoins(x, y, n) {
+      let coin = kontra.Sprite({
+        type: "coin",
+        x: 32 * x,
+        y: 32 * y,
+        width: 28,
+        height: 28,
+        dx: map.dx,
+        image: kontra.imageAssets["coin"]
+      });
+      if (n === 1) {
+        objects1.push(coin);
+      } else {
+        objects2.push(coin);
+      }
+    }
+    for (var i = 11; i < 16; i += 2) {
+      for (var j = 8; j < 11; j++) {
+        createcoins(i, j, 1);
+      }
+    }
+    createcoins(20, 15, 1);
+
+    createcoins(30, 10, 1);
+    createcoins(31, 9, 1);
+    createcoins(31, 10, 1);
+    createcoins(31, 11, 1);
+    createcoins(32, 10, 1);
+
+    createcoins(49, 4, 1);
+    createcoins(49, 5, 1);
+    createcoins(49, 6, 1);
+    createcoins(48, 5, 1);
+    createcoins(48, 6, 1);
+    createcoins(48, 15, 1);
+    createcoins(49, 15, 1);
+
+    createcoins(8, 10, 2);
+
     let enemies = [
       kontra.Sprite({
         x: map.x + 750,
@@ -375,7 +452,7 @@ kontra
             character.dx += 2;
             once = false;
           }
-          if (character.dx <= 0) {
+          if (character.dx < 0) {
             //set the character's speed to 0~2
             character.dx += 0.08;
           } else if (character.dx > 2) {
@@ -392,7 +469,7 @@ kontra
         if (character.x >= 610) {
           //win
           loop1.stop();
-          win(timer);
+          win(timer, coin);
         }
         if (character.y >= 482) {
           //set the ground level
@@ -412,6 +489,8 @@ kontra
           character.dy = -Math.abs(character.dy) + 1;
         }
         map.update();
+        coin_sign.update();
+        coin_get.update();
         tiles.map(tile => {
           tile.dx = map.dx;
           tile.update();
@@ -451,11 +530,19 @@ kontra
               object.type === "ufo" ||
               object.type === "cockroach"
             ) {
-              loop1.stop();
               lose(map.x, character.x);
+              character.image = kontra.imageAssets["dead"];
+              character.width = 32;
+              character.height = 32;
+              loop1.stop();
             } else if (object.type === "fire") {
               map.dx = -4;
               object.ttl = 0;
+            } else if (object.type === "bounce") {
+              character.dy = -Math.abs(character.dy) - 3;
+            } else if (object.type === "coin") {
+              object.ttl = 0;
+              coin++;
             } else if (object.type === "button") {
               objects1.map(wood => {
                 if (wood.type === "wood_move") {
@@ -474,6 +561,8 @@ kontra
       render() {
         tiles.map(tile => tile.render());
         character.render();
+        coin_sign.render();
+        coin_get.render();
         enemies.map(enemy => enemy.render());
         objects1.map(object => {
           object.render();
@@ -526,7 +615,7 @@ kontra
         }
         if (character.x >= 610) {
           loop2.stop();
-          win(timer);
+          win(timer, coin);
         }
         if (character.y >= 482) {
           character.y = 482;
@@ -541,6 +630,8 @@ kontra
         }
 
         map.update();
+        coin_sign.update();
+        coin_get.update();
         tiles.map(tile => {
           tile.dx = map.dx;
           tile.update();
@@ -557,8 +648,11 @@ kontra
           }
           enemy.update();
           if (enemy.collidesWith(character)) {
-            loop2.stop();
             lose(map.x, character.x);
+            character.image = kontra.imageAssets["dead"];
+            character.width = 32;
+            character.height = 32;
+            loop2.stop();
           }
         });
 
@@ -567,8 +661,11 @@ kontra
           object.update();
           if (object.collidesWith(character)) {
             if (object.type === "water" || object.type === "poison") {
-              loop2.stop();
               lose(map.x, character.x);
+              character.image = kontra.imageAssets["dead"];
+              character.width = 32;
+              character.height = 32;
+              loop2.stop();
             } else if (object.type === "fire") {
               map.dx = -4;
               object.ttl = 0;
@@ -576,6 +673,9 @@ kontra
               character.dy = -Math.abs(character.dy) - 3;
             } else if (object.type === "tree") {
               character.dx = -3;
+            } else if (object.type === "coin") {
+              object.ttl = 0;
+              coin++;
             }
           }
         });
@@ -584,6 +684,8 @@ kontra
       render() {
         tiles.map(tile => tile.render());
         character.render();
+        coin_sign.render();
+        coin_get.render();
         enemies.map(enemy => enemy.render());
         objects2.map(object => object.render());
       }
