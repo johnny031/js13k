@@ -372,23 +372,53 @@ kontra
         createcoins(i, j, 1);
       }
     }
-    createcoins(20, 15, 1);
 
-    createcoins(30, 10, 1);
-    createcoins(31, 9, 1);
-    createcoins(31, 10, 1);
-    createcoins(31, 11, 1);
-    createcoins(32, 10, 1);
-
-    createcoins(49, 4, 1);
-    createcoins(49, 5, 1);
-    createcoins(49, 6, 1);
-    createcoins(48, 5, 1);
-    createcoins(48, 6, 1);
-    createcoins(48, 15, 1);
-    createcoins(49, 15, 1);
-
-    createcoins(8, 10, 2);
+    let coin_coordinates = [
+      [20, 15, 1],
+      [30, 10, 1],
+      [31, 9, 1],
+      [31, 10, 1],
+      [31, 11, 1],
+      [32, 10, 1],
+      [49, 4, 1],
+      [49, 5, 1],
+      [49, 6, 1],
+      [48, 5, 1],
+      [48, 6, 1],
+      [48, 15, 1],
+      [49, 15, 1],
+      [7, 8, 2],
+      [8, 7, 2],
+      [8, 8, 2],
+      [9, 8, 2],
+      [10, 8, 2],
+      [11, 7, 2],
+      [11, 8, 2],
+      [12, 8, 2],
+      [13, 8, 2],
+      [14, 6, 2],
+      [14, 7, 2],
+      [14, 8, 2],
+      [15, 13, 2],
+      [16, 13, 2],
+      [16, 12, 2],
+      [19, 13, 2],
+      [24, 15, 2],
+      [27, 15, 2],
+      [30, 15, 2],
+      [36, 5, 2],
+      [37, 7, 2],
+      [38, 9, 2],
+      [39, 7, 2],
+      [40, 5, 2],
+      [41, 7, 2],
+      [42, 9, 2],
+      [43, 7, 2],
+      [44, 5, 2]
+    ];
+    coin_coordinates.map(coordinate => {
+      createcoins(coordinate[0], coordinate[1], coordinate[2]);
+    });
 
     let enemies = [
       kontra.Sprite({
