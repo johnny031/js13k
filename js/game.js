@@ -274,92 +274,15 @@ kontra
       })
     ];
 
-    function createpoisons(x, y) {
-      let poison = kontra.Sprite({
-        type: "poison",
-        x: 32 * x,
-        y: 32 * y,
-        height: 32,
-        width: 32,
-        image: kontra.imageAssets["poison"]
-      });
-      objects2.push(poison);
-    }
-    //create poisonous tiles
-    for (var i = 4; i < 8; i++) {
-      for (var j = 6; j < 16; j += 3) {
-        createpoisons(j, i);
-      }
-    }
-    function createwaters(x, y, n) {
-      let water = kontra.Sprite({
-        type: "water",
-        x: 32 * x,
-        y: 32 * y,
-        height: 32,
-        width: 32,
-        image: kontra.imageAssets["water"]
-      });
-      if (n === 1) {
-        objects1.push(water);
-      } else {
-        objects2.push(water);
-      }
-    }
-    for (var i = 16; i < 18; i++) {
-      for (var j = 10; j < 17; j++) {
-        createwaters(j, i, 1);
-      }
-    }
-    for (var i = 16; i < 18; i++) {
-      for (var j = 14; j < 17; j++) {
-        createwaters(j, i, 2);
-      }
-    }
-    createwaters(19, 16, 2);
-    createwaters(19, 17, 2);
-
-    function createwoods(x, y) {
-      let wood = kontra.Sprite({
-        type: "wood",
-        x: 32 * x,
-        y: 32 * y,
-        width: 32,
-        height: 32,
-        dx: map.dx,
-        image: kontra.imageAssets["wood"]
-      });
-      objects1.push(wood);
-    }
-    for (var i = 10; i < 18; i += 4) {
-      createwoods(i, 15);
-    }
-
-    function createcockroachs(x, y) {
-      let cockroach = kontra.Sprite({
-        type: "cockroach",
-        x: 32 * x,
-        y: 32 * y,
-        width: 32,
-        height: 32,
-        dx: map.dx,
-        image: kontra.imageAssets["cockroach"]
-      });
-      objects1.push(cockroach);
-    }
-    for (var i = 29; i < 34; i++) {
-      createcockroachs(i, 15);
-    }
-
-    function createcoins(x, y, n) {
+    function createobjects(x, y, n, object, width, height) {
       let coin = kontra.Sprite({
-        type: "coin",
+        type: object,
         x: 32 * x,
         y: 32 * y,
-        width: 28,
-        height: 28,
+        width: width || 32,
+        height: height || 32,
         dx: map.dx,
-        image: kontra.imageAssets["coin"]
+        image: kontra.imageAssets[object]
       });
       if (n === 1) {
         objects1.push(coin);
@@ -367,13 +290,40 @@ kontra
         objects2.push(coin);
       }
     }
+
+    for (var i = 4; i < 8; i++) {
+      for (var j = 6; j < 16; j += 3) {
+        createobjects(j, i, 2, "poison");
+      }
+    }
+    for (var i = 16; i < 18; i++) {
+      for (var j = 10; j < 17; j++) {
+        createobjects(j, i, 1, "water");
+      }
+    }
+    for (var i = 16; i < 18; i++) {
+      for (var j = 14; j < 17; j++) {
+        createobjects(j, i, 2, "water");
+      }
+    }
+    createobjects(19, 16, 2, "water");
+    createobjects(19, 17, 2, "water");
+
+    for (var i = 10; i < 18; i += 4) {
+      createobjects(i, 15, 1, "wood");
+    }
+
+    for (var i = 29; i < 34; i++) {
+      createobjects(i, 15, 1, "cockroach");
+    }
+
     for (var i = 11; i < 16; i += 2) {
       for (var j = 8; j < 11; j++) {
-        createcoins(i, j, 1);
+        createobjects(i, j, 1, "coin", 28, 28);
       }
     }
 
-    let coin_coordinates = [
+    let coin_attribute = [
       [20, 15, 1],
       [30, 10, 1],
       [31, 9, 1],
@@ -416,8 +366,8 @@ kontra
       [43, 7, 2],
       [44, 5, 2]
     ];
-    coin_coordinates.map(coordinate => {
-      createcoins(coordinate[0], coordinate[1], coordinate[2]);
+    coin_attribute.map(attribute => {
+      createobjects(attribute[0], attribute[1], attribute[2], "coin", 28, 28);
     });
 
     let enemies = [
